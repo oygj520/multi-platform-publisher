@@ -29,10 +29,24 @@ class QRCodeLogin:
     def start_browser(self):
         """启动浏览器"""
         self.playwright = sync_playwright().start()
-        self.browser = self.playwright.chromium.launch(
-            headless=False,
-            args=['--no-sandbox', '--disable-setuid-sandbox']
-        )
+        
+        # 使用本地 Chromium 浏览器
+        local_chrome_path = r'E:\chrome-win\chrome.exe'
+        
+        try:
+            self.browser = self.playwright.chromium.launch(
+                headless=False,
+                executable_path=local_chrome_path,
+                args=['--no-sandbox', '--disable-setuid-sandbox']
+            )
+        except Exception as e:
+            # 如果本地浏览器不存在，使用 Playwright 自带的
+            print(f"本地浏览器启动失败：{e}，尝试使用 Playwright 浏览器...")
+            self.browser = self.playwright.chromium.launch(
+                headless=False,
+                args=['--no-sandbox', '--disable-setuid-sandbox']
+            )
+        
         self.context = self.browser.new_context()
         self.page = self.context.new_page()
     
@@ -46,99 +60,166 @@ class QRCodeLogin:
         except:
             pass
     
+    def _filter_valid_cookies(self, cookies):
+        """
+        过滤有效的 Cookie（未过期）
+        
+        Args:
+            cookies: Playwright Cookie 列表
+        
+        Returns:
+            过滤后的 Cookie 字符串
+        """
+        import time
+        current_time = time.time()
+        valid_cookies = []
+        
+        for cookie in cookies:
+            # 检查过期时间
+            expires = cookie.get('expires', -1)
+            
+            # expires=-1 表示会话 Cookie（浏览器关闭后过期），保留
+            # expires>current_time 表示未过期，保留
+            # expires<=current_time 表示已过期，过滤掉
+            if expires == -1 or expires > current_time:
+                valid_cookies.append(f"{cookie['name']}={cookie['value']}")
+        
+        return '; '.join(valid_cookies)
+    
     def login_zhihu(self):
         """知乎扫码登录"""
         print('正在打开知乎登录页面...')
-        self.page.goto('https://www.zhihu.com/signin', wait_until='networkidle')
-        
-        # 等待二维码出现
-        print('请扫描屏幕上的二维码...')
-        print('等待登录...')
-        
-        # 等待登录成功（检测用户头像）
         try:
-            self.page.wait_for_selector('div.TopNav-profile', timeout=120000)
-            print('✅ 登录成功！')
+            self.page.goto('https://www.zhihu.com/signin', wait_until='domcontentloaded', timeout=30000)
             
-            # 获取 Cookie
-            cookies = self.context.cookies()
-            cookie_str = '; '.join([f"{c['name']}={c['value']}" for c in cookies])
+            # 等待二维码出现
+            print('请扫描屏幕上的二维码...')
+            print('等待登录（最多 120 秒）...')
             
-            return True, cookie_str
-        except:
-            print('❌ 登录超时或失败')
-            return False, ''
+            # 等待登录成功（检测用户头像），设置超时
+            import time
+            start_time = time.time()
+            max_wait = 120  # 最多等待 120 秒
+            
+            while time.time() - start_time < max_wait:
+                try:
+                    # 检查是否登录成功
+                    if self.page.query_selector('div.TopNav-profile'):
+                        print('✅ 登录成功！')
+                        cookies = self.context.cookies()
+                        # 过滤过期 Cookie
+                        cookie_str = self._filter_valid_cookies(cookies)
+                        print(f'获取到 {len(cookie_str.split(";"))} 个有效 Cookie')
+                        return True, cookie_str
+                    time.sleep(2)  # 每 2 秒检查一次
+                except:
+                    continue
+            
+            print('❌ 登录超时')
+            return False, '登录超时，请重试'
+            
+        except Exception as e:
+            print(f'❌ 登录失败：{e}')
+            return False, str(e)
     
     def login_xiaohongshu(self):
         """小红书扫码登录"""
         print('正在打开小红书登录页面...')
-        self.page.goto('https://www.xiaohongshu.com/login', wait_until='networkidle')
-        
-        # 等待二维码出现
-        print('请扫描屏幕上的二维码...')
-        print('等待登录...')
-        
-        # 等待登录成功（检测用户信息）
         try:
-            self.page.wait_for_selector('div.user-info', timeout=120000)
-            print('✅ 登录成功！')
+            self.page.goto('https://www.xiaohongshu.com/login', wait_until='domcontentloaded', timeout=30000)
             
-            # 获取 Cookie
-            cookies = self.context.cookies()
-            cookie_str = '; '.join([f"{c['name']}={c['value']}" for c in cookies])
+            print('请扫描屏幕上的二维码...')
+            print('等待登录（最多 120 秒）...')
             
-            return True, cookie_str
-        except:
-            print('❌ 登录超时或失败')
-            return False, ''
+            import time
+            start_time = time.time()
+            max_wait = 120
+            
+            while time.time() - start_time < max_wait:
+                try:
+                    if self.page.query_selector('div.user-info') or self.page.query_selector('[class*="user"]'):
+                        print('✅ 登录成功！')
+                        cookies = self.context.cookies()
+                        # 过滤过期 Cookie
+                        cookie_str = self._filter_valid_cookies(cookies)
+                        print(f'获取到 {len(cookie_str.split(";"))} 个有效 Cookie')
+                        return True, cookie_str
+                    time.sleep(2)
+                except:
+                    continue
+            
+            print('❌ 登录超时')
+            return False, '登录超时，请重试'
+            
+        except Exception as e:
+            print(f'❌ 登录失败：{e}')
+            return False, str(e)
     
     def login_kuaishou(self):
         """快手扫码登录"""
         print('正在打开快手登录页面...')
-        self.page.goto('https://www.kuaishou.com/login', wait_until='networkidle')
-        
-        print('请扫描屏幕上的二维码...')
-        print('等待登录...')
-        
         try:
-            # 等待登录成功
-            self.page.wait_for_timeout(5000)  # 等待 5 秒
-            cookies = self.context.cookies()
+            self.page.goto('https://www.kuaishou.com/login', wait_until='domcontentloaded', timeout=30000)
             
-            # 检查是否有登录态
-            if any(c['name'] == 'kpn' for c in cookies):
-                print('✅ 登录成功！')
-                cookie_str = '; '.join([f"{c['name']}={c['value']}" for c in cookies])
-                return True, cookie_str
+            print('请扫描屏幕上的二维码...')
+            print('等待登录（最多 120 秒）...')
             
-            print('❌ 登录超时或失败')
-            return False, ''
-        except:
-            return False, ''
+            import time
+            start_time = time.time()
+            max_wait = 120
+            
+            while time.time() - start_time < max_wait:
+                try:
+                    cookies = self.context.cookies()
+                    if any(c['name'] == 'kpn' for c in cookies):
+                        print('✅ 登录成功！')
+                        # 过滤过期 Cookie
+                        cookie_str = self._filter_valid_cookies(cookies)
+                        print(f'获取到 {len(cookie_str.split(";"))} 个有效 Cookie')
+                        return True, cookie_str
+                    time.sleep(2)
+                except:
+                    continue
+            
+            print('❌ 登录超时')
+            return False, '登录超时，请重试'
+            
+        except Exception as e:
+            print(f'❌ 登录失败：{e}')
+            return False, str(e)
     
     def login_douyin(self):
         """抖音扫码登录"""
         print('正在打开抖音登录页面...')
-        self.page.goto('https://www.douyin.com/login', wait_until='networkidle')
-        
-        print('请扫描屏幕上的二维码...')
-        print('等待登录...')
-        
         try:
-            # 等待登录成功
-            self.page.wait_for_timeout(5000)
-            cookies = self.context.cookies()
+            self.page.goto('https://www.douyin.com/login', wait_until='domcontentloaded', timeout=30000)
             
-            # 检查是否有登录态
-            if any(c['name'] == 'passport_csrf_token' for c in cookies):
-                print('✅ 登录成功！')
-                cookie_str = '; '.join([f"{c['name']}={c['value']}" for c in cookies])
-                return True, cookie_str
+            print('请扫描屏幕上的二维码...')
+            print('等待登录（最多 120 秒）...')
             
-            print('❌ 登录超时或失败')
-            return False, ''
-        except:
-            return False, ''
+            import time
+            start_time = time.time()
+            max_wait = 120
+            
+            while time.time() - start_time < max_wait:
+                try:
+                    cookies = self.context.cookies()
+                    if any(c['name'] in ['passport_csrf_token', 'sessionid'] for c in cookies):
+                        print('✅ 登录成功！')
+                        # 过滤过期 Cookie
+                        cookie_str = self._filter_valid_cookies(cookies)
+                        print(f'获取到 {len(cookie_str.split(";"))} 个有效 Cookie')
+                        return True, cookie_str
+                    time.sleep(2)
+                except:
+                    continue
+            
+            print('❌ 登录超时')
+            return False, '登录超时，请重试'
+            
+        except Exception as e:
+            print(f'❌ 登录失败：{e}')
+            return False, str(e)
     
     def login(self, platform):
         """

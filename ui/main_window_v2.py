@@ -820,12 +820,23 @@ class CookieStatusCard(QFrame):
             success, result = login_manager.login(self.platform)
             if success:
                 from config import config
+                # 保存到配置文件
                 config.set_platform_cookie(self.platform, result)
-                cookie_manager.save_cookie(self.platform, result)
-                self.update_status(cookie_manager.get_cookie_status(self.platform))
-                QMessageBox.information(self, "成功", "登录成功！")
+                # 保存到 Cookie 管理器并检查结果
+                save_success, save_message = cookie_manager.save_cookie(self.platform, result)
+                if save_success:
+                    # 验证 Cookie
+                    is_valid, validate_message, user_info = cookie_manager.validate_cookie(self.platform)
+                    # 更新状态显示
+                    self.update_status(cookie_manager.get_cookie_status(self.platform))
+                    if is_valid:
+                        QMessageBox.information(self, "登录成功", f"✅ {validate_message}")
+                    else:
+                        QMessageBox.warning(self, "验证失败", f"⚠️ {validate_message}\n\nCookie 已保存，但验证失败。请检查网络连接或重新登录。")
+                else:
+                    QMessageBox.critical(self, "保存失败", f"❌ {save_message}")
             else:
-                QMessageBox.warning(self, "失败", result)
+                QMessageBox.warning(self, "登录失败", result)
         except Exception as e:
             QMessageBox.critical(self, "错误", str(e))
 
