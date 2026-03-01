@@ -402,10 +402,10 @@ class PlatformSelector(QWidget):
         platforms_layout = QVBoxLayout()
         platforms_layout.setSpacing(12)
         
-        self.zhihu_cb = PlatformCard('知乎', '📝', '#0084ff')
-        self.xiaohongshu_cb = PlatformCard('小红书', '📕', '#ff2442')
-        self.kuaishou_cb = PlatformCard('快手', '📹', '#ff4906')
-        self.douyin_cb = PlatformCard('抖音', '🎵', '#00f0ff')
+        self.zhihu_cb = PlatformCard('知乎', '📝', '#4a90e2')
+        self.xiaohongshu_cb = PlatformCard('小红书', '📕', '#ff6b8a')
+        self.kuaishou_cb = PlatformCard('快手', '📹', '#ff6a00')
+        self.douyin_cb = PlatformCard('抖音', '🎵', '#00d4ff')
         
         self.zhihu_cb.setChecked(True)
         self.xiaohongshu_cb.setChecked(True)
@@ -642,14 +642,19 @@ class CookieStatusCard(QFrame):
         
         # 按钮
         btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(10)
         
-        self.validate_btn = ModernButton('验证')
-        self.validate_btn.setFixedHeight(35)
+        self.validate_btn = ModernButton('验证', primary=False)
+        self.validate_btn.setMinimumWidth(80)
+        self.validate_btn.setFixedHeight(40)
+        self.validate_btn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         self.validate_btn.clicked.connect(self.validate_cookie)
         btn_layout.addWidget(self.validate_btn)
         
-        self.edit_btn = ModernButton('配置')
-        self.edit_btn.setFixedHeight(35)
+        self.edit_btn = ModernButton('配置', primary=False)
+        self.edit_btn.setMinimumWidth(80)
+        self.edit_btn.setFixedHeight(40)
+        self.edit_btn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         self.edit_btn.clicked.connect(self.edit_cookie)
         btn_layout.addWidget(self.edit_btn)
         
@@ -983,7 +988,7 @@ class MainWindow(QMainWindow):
     
     def init_ui(self):
         self.setWindowTitle('多平台发布助手 v2.0')
-        self.setMinimumSize(1400, 900)
+        self.setMinimumSize(1500, 1000)
         self.setStyleSheet('background-color: #f8f9fa;')
         
         # 创建中央部件
@@ -1009,26 +1014,33 @@ class MainWindow(QMainWindow):
         
         # 标签页
         tabs = QTabWidget()
+        tabs.setMinimumWidth(1400)
+        tabs.setDocumentMode(True)
+        tabs.setTabPosition(QTabWidget.North)
         tabs.setStyleSheet('''
             QTabWidget::pane {
-                border: none;
-                background-color: transparent;
+                border: 1px solid #e8e8e8;
+                background-color: white;
+                border-radius: 8px;
+                top: -1px;
             }
             QTabBar::tab {
                 background-color: white;
-                border: 2px solid #e8e8e8;
+                border: 1px solid #e8e8e8;
                 border-bottom: none;
-                border-radius: 12px 12px 0 0;
-                padding: 12px 25px;
-                margin-right: 5px;
+                border-top-left-radius: 8px;
+                border-top-right-radius: 8px;
+                padding: 12px 30px;
+                margin-right: 2px;
                 font-size: 15px;
-                font-weight: 500;
+                font-weight: 600;
                 color: #666;
+                min-width: 100px;
             }
             QTabBar::tab:selected {
                 background-color: #667eea;
                 color: white;
-                border: 2px solid #667eea;
+                border: 1px solid #667eea;
             }
             QTabBar::tab:hover {
                 background-color: #f5f5f5;
@@ -1048,15 +1060,15 @@ class MainWindow(QMainWindow):
         self.platform_selector = PlatformSelector()
         publish_layout.addWidget(self.platform_selector, stretch=1)
         
-        tabs.addTab(publish_widget, '  发布内容')
+        tabs.addTab(publish_widget, '发布内容')
         
         # 历史标签页
         self.history = PublishHistory()
-        tabs.addTab(self.history, '  发布历史')
+        tabs.addTab(self.history, '发布历史')
         
         # 设置标签页
         self.settings = SettingsWidget()
-        tabs.addTab(self.settings, '  设置')
+        tabs.addTab(self.settings, '设置')
         
         main_layout.addWidget(tabs)
         
