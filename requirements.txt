@@ -1,12 +1,13 @@
 # 多平台发布助手 - 核心依赖
+# 版本已测试通过 (2026-03-01)
 
 # Web 框架
-PyQt5>=5.15.0
+PyQt5==5.15.11
 pywebview>=4.0.0
 
 # Markdown 编辑
-markdown>=3.4.0
-PyQtWebEngine>=5.15.0
+markdown==3.9
+PyQtWebEngine==5.15.7
 
 # 浏览器自动化
 playwright>=1.40.0
