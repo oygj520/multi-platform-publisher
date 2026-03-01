@@ -1,8 +1,9 @@
-# 🚀 多平台发布助手 v2.0
+# 🚀 多平台发布助手 v2.1
 
-> 一键发布内容到知乎、小红书、快手、抖音的桌面级工具
+> 一键发布内容到知乎、小红书、快手、抖音的桌面级工具  
+> **新增**：📱 扫码登录功能 - 30 秒快速登录，无需手动配置 Cookie
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/oygj520/multi-platform-publisher)
+[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/oygj520/multi-platform-publisher)
 [![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/status-stable-green.svg)]()
@@ -11,11 +12,18 @@
 
 ## ✨ 功能特性
 
+### 🎯 V2.1 新增功能
+
+| 功能 | 状态 | 说明 |
+|------|------|------|
+| **📱 扫码登录** | ✅ 新增 | 手机扫码快速获取 Cookie，30 秒完成登录 |
+| **🔒 自动保存** | ✅ 新增 | Cookie 自动加密存储，无需手动复制 |
+| **📖 完善文档** | ✅ 新增 | 详细使用手册、快速入门指南、编码修复说明 |
+
 ### 🎯 V2.0 核心功能
 
 | 功能 | 状态 | 说明 |
 |------|------|------|
-| **扫码登录** | ✅ 新增 | 手机扫码快速获取 Cookie，无需手动操作 |
 | Playwright 自动化 | ✅ 已完成 | 基于本地 Chromium 的浏览器自动化 |
 | Cookie 加密存储 | ✅ 已完成 | Fernet 加密，SQLite 存储 |
 | Cookie 在线验证 | ✅ 已完成 | 实时验证 Cookie 有效性 |
@@ -289,12 +297,25 @@ python build.py
 
 ## 📝 更新日志
 
-### v2.1 (2026-03-01)
-- ✨ **新增扫码登录功能** - 支持知乎/小红书/快手/抖音
-- ✨ 自动获取并保存 Cookie
-- ✨ 手机扫码，无需手动操作
-- ✨ 新增快速入门指南
-- ✨ 新增功能说明文档
+### v2.1 (2026-03-01) - 扫码登录版本 🎉
+
+**新增功能**：
+- ✨ **扫码登录功能** - 支持知乎/小红书/快手/抖音四个平台
+- ✨ **自动 Cookie 保存** - 登录成功后自动获取并加密保存 Cookie
+- ✨ **快速入门指南** - 5 分钟上手教程（QUICK_START.md）
+- ✨ **功能说明文档** - 详细的扫码登录说明（QR_CODE_LOGIN.md）
+- ✨ **编码修复说明** - 文件编码问题解决方案（ENCODING_FIX_GUIDE.md）
+
+**改进优化**：
+- 🔧 改进快手/抖音登录检测逻辑，增加成功标识检测
+- 🔧 增强错误处理，提供更详细的错误信息
+- 🔧 优化浏览器窗口显示，确保二维码可见
+- 🔧 完善文档体系，适合新手使用
+
+**文档更新**：
+- 📖 更新 USER_GUIDE.md - 添加详细扫码登录步骤
+- 📖 更新 README.md - 添加 v2.1 功能说明
+- 📖 创建 ENCODING_FIX_GUIDE.md - 编码问题修复指南
 
 ### v2.0 (2026-03-01)
 - ✨ 实现实际发布逻辑（知乎/小红书/快手/抖音）
@@ -324,6 +345,8 @@ MIT License
 **测试状态**: ✅ 所有测试通过
 
 **相关文档**:
-- 📖 使用手册：`USER_GUIDE.md`
-- 🚀 快速入门：`QUICK_START.md`
-- 📱 扫码登录说明：`QR_CODE_LOGIN.md`
+- 📖 使用手册：`USER_GUIDE.md` - 详细的使用说明和常见问题
+- 🚀 快速入门：`QUICK_START.md` - 5 分钟上手教程
+- 📱 扫码登录说明：`QR_CODE_LOGIN.md` - 扫码登录功能详解
+- 🔧 编码修复：`ENCODING_FIX_GUIDE.md` - 文件编码问题解决方案
+- 📋 测试报告：`QRCODE_LOGIN_TEST_REPORT.md` - 功能测试报告
