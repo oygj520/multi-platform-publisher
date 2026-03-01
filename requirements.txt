@@ -1,23 +1,24 @@
 # 多平台发布助手 - 核心依赖
-# 版本已测试通过 (2026-03-01)
+# V2 版本 (2026-03-01)
 
-# Web 框架
+# GUI 框架
 PyQt5==5.15.11
-pywebview>=4.0.0
+PyQtWebEngine==5.15.7
 
 # Markdown 编辑
 markdown==3.9
-PyQtWebEngine==5.15.7
 
 # 浏览器自动化
 playwright>=1.40.0
 
-# 数据处理
+# HTTP 请求
 requests>=2.28.0
+
+# 图片处理
 Pillow>=9.0.0
 
-# 数据存储
-sqlite3
+# 加密
+cryptography>=41.0.0
 
 # 打包工具
 pyinstaller>=6.0.0
