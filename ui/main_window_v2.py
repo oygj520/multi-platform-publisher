@@ -813,32 +813,56 @@ class CookieStatusCard(QFrame):
     def qrcode_login(self):
         """扫码登录"""
         from publisher.qrcode_login import QRCodeLogin
-        reply = QMessageBox.question(self, "扫码登录", "请用手机扫码登录", QMessageBox.Ok | QMessageBox.Cancel)
-        if reply == QMessageBox.Cancel: return
+        import time
+        
+        reply = QMessageBox.question(self, "扫码登录", "请用手机扫码登录\n\n扫码成功后请等待系统自动完成验证", QMessageBox.Ok | QMessageBox.Cancel)
+        if reply == QMessageBox.Cancel: 
+            return
+        
         try:
+            # 禁用按钮，防止重复点击
+            self.qrcode_btn.setEnabled(False)
+            self.qrcode_btn.setText("⏳ 登录中...")
+            
             login_manager = QRCodeLogin()
             success, result = login_manager.login(self.platform)
+            
             if success:
                 from config import config
                 # 保存到配置文件
                 config.set_platform_cookie(self.platform, result)
-                # 保存到 Cookie 管理器并检查结果
+                
+                # 保存到 Cookie 管理器
                 save_success, save_message = cookie_manager.save_cookie(self.platform, result)
+                
                 if save_success:
+                    # 延迟验证：等待 10 秒让 Cookie 完全生效
+                    print(f'[DEBUG] 等待 10 秒让 Cookie 完全生效...')
+                    time.sleep(10)
+                    
                     # 验证 Cookie
+                    print(f'[DEBUG] 开始验证 Cookie...')
                     is_valid, validate_message, user_info = cookie_manager.validate_cookie(self.platform)
+                    
                     # 更新状态显示
                     self.update_status(cookie_manager.get_cookie_status(self.platform))
+                    
                     if is_valid:
                         QMessageBox.information(self, "登录成功", f"✅ {validate_message}")
                     else:
-                        QMessageBox.warning(self, "验证失败", f"⚠️ {validate_message}\n\nCookie 已保存，但验证失败。请检查网络连接或重新登录。")
+                        QMessageBox.warning(self, "验证失败", f"⚠️ {validate_message}\n\nCookie 已保存，但验证失败。\n可能原因：\n1. 网络延迟，Cookie 尚未完全生效\n2. 需要手动验证\n\n建议：点击"验证"按钮重新验证，或重新扫码登录。")
                 else:
                     QMessageBox.critical(self, "保存失败", f"❌ {save_message}")
             else:
                 QMessageBox.warning(self, "登录失败", result)
+                
         except Exception as e:
-            QMessageBox.critical(self, "错误", str(e))
+            print(f'[ERROR] 扫码登录异常：{e}')
+            QMessageBox.critical(self, "错误", f"登录过程出错：{str(e)}")
+        finally:
+            # 恢复按钮状态
+            self.qrcode_btn.setEnabled(True)
+            self.qrcode_btn.setText("📱 扫码登录")
 
     def edit_cookie(self):
         """编辑 Cookie"""

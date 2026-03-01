@@ -73,17 +73,31 @@ class QRCodeLogin:
         import time
         current_time = time.time()
         valid_cookies = []
+        expired_count = 0
+        
+        print(f'[DEBUG] 获取到原始 Cookie 数量：{len(cookies)}')
         
         for cookie in cookies:
             # 检查过期时间
             expires = cookie.get('expires', -1)
+            name = cookie.get('name', 'unknown')
             
             # expires=-1 表示会话 Cookie（浏览器关闭后过期），保留
             # expires>current_time 表示未过期，保留
             # expires<=current_time 表示已过期，过滤掉
             if expires == -1 or expires > current_time:
                 valid_cookies.append(f"{cookie['name']}={cookie['value']}")
+                if expires == -1:
+                    print(f'[DEBUG] ✓ 会话 Cookie: {name}')
+                else:
+                    expiry_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(expires))
+                    print(f'[DEBUG] ✓ 有效 Cookie: {name} (过期：{expiry_str})')
+            else:
+                expired_count += 1
+                expiry_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(expires))
+                print(f'[DEBUG] ✗ 已过期 Cookie: {name} (过期：{expiry_str})')
         
+        print(f'[DEBUG] 过滤后有效 Cookie 数量：{len(valid_cookies)} (过期：{expired_count})')
         return '; '.join(valid_cookies)
     
     def login_zhihu(self):
@@ -100,19 +114,35 @@ class QRCodeLogin:
             import time
             start_time = time.time()
             max_wait = 120  # 最多等待 120 秒
+            login_detected_time = None
             
             while time.time() - start_time < max_wait:
                 try:
                     # 检查是否登录成功
                     if self.page.query_selector('div.TopNav-profile'):
-                        print('✅ 登录成功！')
+                        login_detected_time = time.time()
+                        print(f'✅ 检测到登录成功！耗时：{login_detected_time - start_time:.1f}秒')
+                        
+                        # 等待 5 秒让 Cookie 完全生效
+                        print('⏳ 等待 Cookie 生效（5 秒）...')
+                        time.sleep(5)
+                        
                         cookies = self.context.cookies()
+                        print(f'[DEBUG] 登录成功后获取到 {len(cookies)} 个原始 Cookie')
+                        
                         # 过滤过期 Cookie
                         cookie_str = self._filter_valid_cookies(cookies)
-                        print(f'获取到 {len(cookie_str.split(";"))} 个有效 Cookie')
+                        valid_count = len(cookie_str.split(';')) if cookie_str else 0
+                        print(f'✅ 获取到 {valid_count} 个有效 Cookie')
+                        
+                        if not cookie_str or valid_count == 0:
+                            print('[WARNING] 过滤后没有有效 Cookie，尝试返回原始 Cookie')
+                            cookie_str = '; '.join([f"{c['name']}={c['value']}" for c in cookies])
+                        
                         return True, cookie_str
                     time.sleep(2)  # 每 2 秒检查一次
-                except:
+                except Exception as e:
+                    print(f'[DEBUG] 检查登录状态时出错：{e}')
                     continue
             
             print('❌ 登录超时')
@@ -134,18 +164,34 @@ class QRCodeLogin:
             import time
             start_time = time.time()
             max_wait = 120
+            login_detected_time = None
             
             while time.time() - start_time < max_wait:
                 try:
                     if self.page.query_selector('div.user-info') or self.page.query_selector('[class*="user"]'):
-                        print('✅ 登录成功！')
+                        login_detected_time = time.time()
+                        print(f'✅ 检测到登录成功！耗时：{login_detected_time - start_time:.1f}秒')
+                        
+                        # 等待 5 秒让 Cookie 完全生效
+                        print('⏳ 等待 Cookie 生效（5 秒）...')
+                        time.sleep(5)
+                        
                         cookies = self.context.cookies()
+                        print(f'[DEBUG] 登录成功后获取到 {len(cookies)} 个原始 Cookie')
+                        
                         # 过滤过期 Cookie
                         cookie_str = self._filter_valid_cookies(cookies)
-                        print(f'获取到 {len(cookie_str.split(";"))} 个有效 Cookie')
+                        valid_count = len(cookie_str.split(';')) if cookie_str else 0
+                        print(f'✅ 获取到 {valid_count} 个有效 Cookie')
+                        
+                        if not cookie_str or valid_count == 0:
+                            print('[WARNING] 过滤后没有有效 Cookie，尝试返回原始 Cookie')
+                            cookie_str = '; '.join([f"{c['name']}={c['value']}" for c in cookies])
+                        
                         return True, cookie_str
                     time.sleep(2)
-                except:
+                except Exception as e:
+                    print(f'[DEBUG] 检查登录状态时出错：{e}')
                     continue
             
             print('❌ 登录超时')
@@ -167,18 +213,36 @@ class QRCodeLogin:
             import time
             start_time = time.time()
             max_wait = 120
+            login_detected_time = None
             
             while time.time() - start_time < max_wait:
                 try:
                     cookies = self.context.cookies()
                     if any(c['name'] == 'kpn' for c in cookies):
-                        print('✅ 登录成功！')
+                        login_detected_time = time.time()
+                        print(f'✅ 检测到登录成功！耗时：{login_detected_time - start_time:.1f}秒')
+                        print(f'[DEBUG] 检测到 kpn Cookie，数量：{len(cookies)}')
+                        
+                        # 等待 5 秒让 Cookie 完全生效
+                        print('⏳ 等待 Cookie 生效（5 秒）...')
+                        time.sleep(5)
+                        
+                        cookies = self.context.cookies()
+                        print(f'[DEBUG] 登录成功后获取到 {len(cookies)} 个原始 Cookie')
+                        
                         # 过滤过期 Cookie
                         cookie_str = self._filter_valid_cookies(cookies)
-                        print(f'获取到 {len(cookie_str.split(";"))} 个有效 Cookie')
+                        valid_count = len(cookie_str.split(';')) if cookie_str else 0
+                        print(f'✅ 获取到 {valid_count} 个有效 Cookie')
+                        
+                        if not cookie_str or valid_count == 0:
+                            print('[WARNING] 过滤后没有有效 Cookie，尝试返回原始 Cookie')
+                            cookie_str = '; '.join([f"{c['name']}={c['value']}" for c in cookies])
+                        
                         return True, cookie_str
                     time.sleep(2)
-                except:
+                except Exception as e:
+                    print(f'[DEBUG] 检查登录状态时出错：{e}')
                     continue
             
             print('❌ 登录超时')
@@ -200,18 +264,36 @@ class QRCodeLogin:
             import time
             start_time = time.time()
             max_wait = 120
+            login_detected_time = None
             
             while time.time() - start_time < max_wait:
                 try:
                     cookies = self.context.cookies()
                     if any(c['name'] in ['passport_csrf_token', 'sessionid'] for c in cookies):
-                        print('✅ 登录成功！')
+                        login_detected_time = time.time()
+                        print(f'✅ 检测到登录成功！耗时：{login_detected_time - start_time:.1f}秒')
+                        print(f'[DEBUG] 检测到关键 Cookie: {[c["name"] for c in cookies if c["name"] in ["passport_csrf_token", "sessionid"]]}')
+                        
+                        # 等待 5 秒让 Cookie 完全生效
+                        print('⏳ 等待 Cookie 生效（5 秒）...')
+                        time.sleep(5)
+                        
+                        cookies = self.context.cookies()
+                        print(f'[DEBUG] 登录成功后获取到 {len(cookies)} 个原始 Cookie')
+                        
                         # 过滤过期 Cookie
                         cookie_str = self._filter_valid_cookies(cookies)
-                        print(f'获取到 {len(cookie_str.split(";"))} 个有效 Cookie')
+                        valid_count = len(cookie_str.split(';')) if cookie_str else 0
+                        print(f'✅ 获取到 {valid_count} 个有效 Cookie')
+                        
+                        if not cookie_str or valid_count == 0:
+                            print('[WARNING] 过滤后没有有效 Cookie，尝试返回原始 Cookie')
+                            cookie_str = '; '.join([f"{c['name']}={c['value']}" for c in cookies])
+                        
                         return True, cookie_str
                     time.sleep(2)
-                except:
+                except Exception as e:
+                    print(f'[DEBUG] 检查登录状态时出错：{e}')
                     continue
             
             print('❌ 登录超时')
