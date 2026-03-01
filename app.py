@@ -13,7 +13,7 @@ sys.path.insert(0, project_root)
 
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt
-from ui.main_window import MainWindow
+from ui.main_window_v2 import MainWindow
 
 
 def main():
