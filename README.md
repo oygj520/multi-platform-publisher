@@ -1,16 +1,34 @@
 # 🚀 多平台发布助手 v2.0
 
-一个桌面级的多平台内容发布工具，支持一键发布到知乎、小红书、快手、抖音。
+> 一键发布内容到知乎、小红书、快手、抖音的桌面级工具
+
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/oygj520/multi-platform-publisher)
+[![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
+[![Status](https://img.shields.io/badge/status-stable-green.svg)]()
+
+---
 
 ## ✨ 功能特性
 
-### v2.0 新功能
+### 🎯 V2.0 核心功能
 
-- ✅ **实际发布逻辑** - 基于 Playwright 的浏览器自动化
-- ✅ **Cookie 加密存储** - 使用 Fernet 加密，安全存储
-- ✅ **可视化 Cookie 管理** - 直观的 Cookie 配置界面
-- ✅ **错误处理机制** - 完善的异常捕获和重试
-- ✅ **实时状态反馈** - 发布进度实时显示
+| 功能 | 状态 | 说明 |
+|------|------|------|
+| Playwright 自动化 | ✅ 已完成 | 基于本地 Chromium 的浏览器自动化 |
+| Cookie 加密存储 | ✅ 已完成 | Fernet 加密，SQLite 存储 |
+| Cookie 在线验证 | ✅ 已完成 | 实时验证 Cookie 有效性 |
+| 错误重试机制 | ✅ 已完成 | 自动重试 3 次，智能错误处理 |
+| 实时状态反馈 | ✅ 已完成 | 发布进度实时显示 |
+
+### 📋 平台支持
+
+| 平台 | 类型 | 状态 | 备注 |
+|------|------|------|------|
+| 知乎 | 专栏文章 | ✅ 完全支持 | 支持标题、内容、封面 |
+| 小红书 | 图文笔记 | ✅ 完全支持 | 支持标题、内容、图片 |
+| 快手 | 图文/视频 | 🟡 部分支持 | 主要以视频为主 |
+| 抖音 | 图文/视频 | 🟡 部分支持 | 主要以视频为主 |
 
 ### 基础功能
 
