@@ -567,7 +567,7 @@ from datetime import datetime
 
 
 class CookieStatusCard(QFrame):
-    """Cookie 状态卡片"""
+    """Cookie 状态卡片 - 新 UI 版本"""
     
     def __init__(self, platform: str, parent=None):
         super().__init__(parent)
@@ -597,58 +597,165 @@ class CookieStatusCard(QFrame):
         self.setStyleSheet('''
             QFrame {
                 background-color: white;
-                border-radius: 12px;
+                border-radius: 20px;
                 border: 2px solid #e8e8e8;
+            }
+            QFrame:hover {
+                border: 2px solid #667eea;
             }
         ''')
         
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 15, 20, 15)
-        layout.setSpacing(10)
+        # 添加阴影效果
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(30)
+        shadow.setXOffset(0)
+        shadow.setYOffset(6)
+        shadow.setColor(QColor(0, 0, 0, 40))
+        self.setGraphicsEffect(shadow)
         
-        # 平台名称
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(30, 30, 30, 30)
+        layout.setSpacing(20)
+        
+        # === 顶部：平台名称和图标 ===
         header_layout = QHBoxLayout()
+        header_layout.setSpacing(15)
+        
         icon = self.platform_icons.get(self.platform, '📌')
         name = self.platform_names.get(self.platform, self.platform)
         
-        title_label = QLabel(f'{icon} {name}')
-        title_label.setFont(QFont('Microsoft YaHei', 14, QFont.Bold))
-        title_label.setStyleSheet(f'color: {self.platform_colors.get(self.platform, "#333")};')
+        # 平台图标
+        icon_label = QLabel(icon)
+        icon_label.setFont(QFont('Segoe UI Emoji', 32))
+        icon_label.setStyleSheet('padding: 10px;')
+        header_layout.addWidget(icon_label)
+        
+        # 平台名称
+        title_label = QLabel(name)
+        title_label.setFont(QFont('Microsoft YaHei', 18, QFont.Bold))
+        title_label.setStyleSheet(f'color: {self.platform_colors.get(self.platform, "#333")}; padding: 5px 0;')
         header_layout.addWidget(title_label)
         
         header_layout.addStretch()
         
         # 状态指示器
         self.status_indicator = QLabel('●')
-        self.status_indicator.setFont(QFont('Arial', 16))
+        self.status_indicator.setFont(QFont('Arial', 24))
         self.status_indicator.setStyleSheet('color: #ccc;')
+        self.status_indicator.setFixedWidth(30)
         header_layout.addWidget(self.status_indicator)
         
         layout.addLayout(header_layout)
         
-        # 状态信息
+        # === 中间：Cookie 状态信息 ===
+        status_container = QFrame()
+        status_container.setStyleSheet('background-color: #f8f9fa; border-radius: 12px; padding: 15px;')
+        status_layout = QVBoxLayout(status_container)
+        status_layout.setContentsMargins(20, 20, 20, 20)
+        status_layout.setSpacing(10)
+        
+        # 状态文本
         self.status_text = QLabel('未配置 Cookie')
-        self.status_text.setStyleSheet('color: #888; font-size: 13px;')
-        layout.addWidget(self.status_text)
+        self.status_text.setFont(QFont('Microsoft YaHei', 14))
+        self.status_text.setStyleSheet('color: #888;')
+        self.status_text.setWordWrap(True)
+        status_layout.addWidget(self.status_text)
         
         # 用户名
         self.username_label = QLabel('')
-        self.username_label.setStyleSheet('color: #667eea; font-size: 13px; font-weight: 500;')
-        layout.addWidget(self.username_label)
+        self.username_label.setFont(QFont('Microsoft YaHei', 13, QFont.Bold))
+        self.username_label.setStyleSheet('color: #667eea;')
+        status_layout.addWidget(self.username_label)
         
-        # 按钮
+        layout.addWidget(status_container)
+        
+        # === 扫码登录按钮（大按钮）===
+        self.qrcode_btn = QPushButton("📱 扫码登录")
+        self.qrcode_btn.setCursor(Qt.PointingHandCursor)
+        self.qrcode_btn.setFixedHeight(60)
+        self.qrcode_btn.setFixedWidth(300)
+        self.qrcode_btn.setFont(QFont('Microsoft YaHei', 16, QFont.Bold))
+        self.qrcode_btn.setStyleSheet(f'''
+            QPushButton {{
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                    stop:0 {self.platform_colors.get(self.platform, '#667eea')}, 
+                    stop:1 #764ba2);
+                color: white;
+                border: none;
+                border-radius: 15px;
+                font-size: 16px;
+                font-weight: 600;
+            }}
+            QPushButton:hover {{
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                    stop:0 #7c90db, stop:1 #8b5fbf);
+            }}
+            QPushButton:pressed {{
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                    stop:0 #5a6fd6, stop:1 #6a4190);
+            }}
+        ''')
+        self.qrcode_btn.clicked.connect(self.qrcode_login)
+        
+        qrcode_btn_layout = QHBoxLayout()
+        qrcode_btn_layout.addStretch()
+        qrcode_btn_layout.addWidget(self.qrcode_btn)
+        qrcode_btn_layout.addStretch()
+        layout.addLayout(qrcode_btn_layout)
+        
+        # === 底部：验证和配置按钮（并排）===
         btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(15)
         
-        self.validate_btn = ModernButton('验证')
-        self.validate_btn.setFixedHeight(35)
+        self.validate_btn = QPushButton('✓ 验证')
+        self.validate_btn.setCursor(Qt.PointingHandCursor)
+        self.validate_btn.setFixedHeight(50)
+        self.validate_btn.setFixedWidth(200)
+        self.validate_btn.setFont(QFont('Microsoft YaHei', 16, QFont.Bold))
+        self.validate_btn.setStyleSheet('''
+            QPushButton {
+                background-color: #10b981;
+                color: white;
+                border: none;
+                border-radius: 12px;
+                font-size: 16px;
+                font-weight: 600;
+            }
+            QPushButton:hover {
+                background-color: #059669;
+            }
+            QPushButton:pressed {
+                background-color: #047857;
+            }
+        ''')
         self.validate_btn.clicked.connect(self.validate_cookie)
         btn_layout.addWidget(self.validate_btn)
         
-        self.edit_btn = ModernButton('配置')
-        self.edit_btn.setFixedHeight(35)
+        self.edit_btn = QPushButton('⚙ 配置')
+        self.edit_btn.setCursor(Qt.PointingHandCursor)
+        self.edit_btn.setFixedHeight(50)
+        self.edit_btn.setFixedWidth(200)
+        self.edit_btn.setFont(QFont('Microsoft YaHei', 16, QFont.Bold))
+        self.edit_btn.setStyleSheet('''
+            QPushButton {
+                background-color: #6b7280;
+                color: white;
+                border: none;
+                border-radius: 12px;
+                font-size: 16px;
+                font-weight: 600;
+            }
+            QPushButton:hover {
+                background-color: #4b5563;
+            }
+            QPushButton:pressed {
+                background-color: #374151;
+            }
+        ''')
         self.edit_btn.clicked.connect(self.edit_cookie)
         btn_layout.addWidget(self.edit_btn)
         
+        btn_layout.addStretch()
         layout.addLayout(btn_layout)
         
         self.setLayout(layout)
@@ -702,6 +809,26 @@ class CookieStatusCard(QFrame):
         else:
             QMessageBox.warning(self, '验证失败', message)
     
+
+    def qrcode_login(self):
+        """扫码登录"""
+        from publisher.qrcode_login import QRCodeLogin
+        reply = QMessageBox.question(self, "扫码登录", "请用手机扫码登录", QMessageBox.Ok | QMessageBox.Cancel)
+        if reply == QMessageBox.Cancel: return
+        try:
+            login_manager = QRCodeLogin()
+            success, result = login_manager.login(self.platform)
+            if success:
+                from config import config
+                config.set_platform_cookie(self.platform, result)
+                cookie_manager.save_cookie(self.platform, result)
+                self.update_status(cookie_manager.get_cookie_status(self.platform))
+                QMessageBox.information(self, "成功", "登录成功！")
+            else:
+                QMessageBox.warning(self, "失败", result)
+        except Exception as e:
+            QMessageBox.critical(self, "错误", str(e))
+
     def edit_cookie(self):
         """编辑 Cookie"""
         dialog = CookieEditDialog(self.platform, self)
@@ -820,153 +947,185 @@ class CookieEditDialog(QDialog):
 
 
 class SettingsWidget(QWidget):
-    """设置页面 - V2 版本"""
+    """设置页面 - 新 UI 版本（标签页布局）"""
     
     def __init__(self):
         super().__init__()
+        self.platform_cards = {}
         self.init_ui()
         self.refresh_cookie_status()
     
     def init_ui(self):
         layout = QVBoxLayout(self)
-        layout.setSpacing(20)
+        layout.setContentsMargins(30, 30, 30, 30)
+        layout.setSpacing(25)
         
         # 标题
-        title = QLabel('⚙️ 平台配置')
-        title.setFont(QFont('Microsoft YaHei', 18, QFont.Bold))
+        title = QLabel('⚙️ Cookie 管理')
+        title.setFont(QFont('Microsoft YaHei', 22, QFont.Bold))
         title.setStyleSheet('color: #333; padding: 10px 0;')
         layout.addWidget(title)
         
-        # Cookie 状态卡片
-        status_layout = QHBoxLayout()
-        status_layout.setSpacing(15)
-        
-        self.zhihu_card = CookieStatusCard('zhihu')
-        self.xiaohongshu_card = CookieStatusCard('xiaohongshu')
-        self.kuaishou_card = CookieStatusCard('kuaishou')
-        self.douyin_card = CookieStatusCard('douyin')
-        
-        status_layout.addWidget(self.zhihu_card)
-        status_layout.addWidget(self.xiaohongshu_card)
-        status_layout.addWidget(self.kuaishou_card)
-        status_layout.addWidget(self.douyin_card)
-        
-        layout.addLayout(status_layout)
-        
-        # 刷新按钮
-        refresh_btn = ModernButton('🔄 刷新状态')
-        refresh_btn.clicked.connect(self.refresh_cookie_status)
-        layout.addWidget(refresh_btn)
-        
-        # 验证历史
-        history_card = ModernCard()
-        history_layout = QVBoxLayout(history_card)
-        history_layout.setContentsMargins(20, 15, 20, 15)
-        
-        history_title = QLabel('📊 最近验证记录')
-        history_title.setFont(QFont('Microsoft YaHei', 14, QFont.Bold))
-        history_layout.addWidget(history_title)
-        
-        self.validation_table = QTableWidget()
-        self.validation_table.setColumnCount(4)
-        self.validation_table.setHorizontalHeaderLabels(['平台', '状态', '用户', '时间'])
-        self.validation_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.validation_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.validation_table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.validation_table.setStyleSheet('''
-            QTableWidget {
+        # === 平台标签页 ===
+        self.tabs = QTabWidget()
+        self.tabs.setStyleSheet('''
+            QTabWidget::pane {
+                border: 2px solid #e8e8e8;
+                border-radius: 16px;
+                background-color: #fafafa;
+                padding: 20px;
+            }
+            QTabBar::tab {
                 background-color: white;
-                border: none;
-                gridline-color: #e8e8e8;
-            }
-            QTableWidget::item {
-                padding: 10px;
-            }
-            QHeaderView::section {
-                background-color: #f5f5f5;
-                padding: 10px;
-                border: none;
+                border: 2px solid #e8e8e8;
+                border-bottom: none;
+                border-radius: 12px 12px 0 0;
+                padding: 15px 30px;
+                margin-right: 8px;
+                font-size: 16px;
                 font-weight: 600;
+                color: #666;
+                min-width: 120px;
+            }
+            QTabBar::tab:selected {
+                background-color: #667eea;
+                color: white;
+                border: 2px solid #667eea;
+            }
+            QTabBar::tab:hover {
+                background-color: #f0f0f0;
             }
         ''')
-        history_layout.addWidget(self.validation_table)
         
-        layout.addWidget(history_card)
+        # 为每个平台创建标签页
+        platform_configs = [
+            ('zhihu', '📝 知乎', '#0084ff'),
+            ('xiaohongshu', '📕 小红书', '#ff2442'),
+            ('kuaishou', '📹 快手', '#ff4906'),
+            ('douyin', '🎵 抖音', '#00f0ff')
+        ]
+        
+        for platform_key, tab_name, color in platform_configs:
+            # 创建标签页容器
+            tab_widget = QWidget()
+            tab_layout = QVBoxLayout(tab_widget)
+            tab_layout.setContentsMargins(20, 20, 20, 20)
+            tab_layout.setSpacing(20)
+            
+            # 创建 Cookie 状态卡片
+            card = CookieStatusCard(platform_key)
+            tab_layout.addWidget(card)
+            tab_layout.addStretch()
+            
+            # 添加到标签页
+            self.tabs.addTab(tab_widget, tab_name)
+            self.platform_cards[platform_key] = card
+        
+        layout.addWidget(self.tabs)
+        
+        # === 底部操作栏 ===
+        bottom_layout = QHBoxLayout()
+        
+        # 刷新按钮
+        refresh_btn = ModernButton('🔄 刷新所有状态')
+        refresh_btn.setFixedHeight(50)
+        refresh_btn.setFixedWidth(200)
+        refresh_btn.clicked.connect(self.refresh_cookie_status)
+        bottom_layout.addWidget(refresh_btn)
+        
+        bottom_layout.addStretch()
+        
+        # 帮助按钮
+        help_btn = ModernButton('❓ 如何获取 Cookie')
+        help_btn.setFixedHeight(50)
+        help_btn.setFixedWidth(200)
+        help_btn.clicked.connect(self.show_help)
+        bottom_layout.addWidget(help_btn)
+        
+        layout.addLayout(bottom_layout)
+        
+        self.setLayout(layout)
+    
+    def show_help(self):
+        """显示帮助信息"""
+        help_dialog = QDialog(self)
+        help_dialog.setWindowTitle('📌 如何获取 Cookie')
+        help_dialog.setMinimumSize(700, 600)
+        help_dialog.setStyleSheet('background-color: #f8f9fa;')
+        
+        layout = QVBoxLayout(help_dialog)
+        layout.setSpacing(20)
         
         # 说明卡片
         info_card = ModernCard()
         info_layout = QVBoxLayout(info_card)
-        info_layout.setContentsMargins(25, 20, 25, 20)
+        info_layout.setContentsMargins(30, 25, 30, 25)
         
         info_text = QLabel('''
-        <h3 style="color: #667eea; margin-bottom: 15px;">💡 使用提示</h3>
-        <ul style="line-height: 2; color: #555;">
-            <li>Cookie 有效期为 7 天，建议定期更新</li>
-            <li>如发布失败，请先验证 Cookie 是否有效</li>
-            <li>不同平台需要分别登录获取 Cookie</li>
-            <li>Cookie 已加密存储，请放心使用</li>
-        </ul>
+        <h2 style="color: #667eea; margin-bottom: 20px; font-size: 20px;">📌 如何获取 Cookie</h2>
+        
+        <h3 style="color: #333; margin-top: 20px;">步骤 1：登录平台</h3>
+        <p style="line-height: 1.8; color: #555; font-size: 14px;">
+            使用浏览器（推荐 Chrome 或 Edge）登录对应的平台账号
+        </p>
+        
+        <h3 style="color: #333; margin-top: 20px;">步骤 2：打开开发者工具</h3>
+        <p style="line-height: 1.8; color: #555; font-size: 14px;">
+            按 <b>F12</b> 键打开开发者工具，或右键点击页面选择"检查"
+        </p>
+        
+        <h3 style="color: #333; margin-top: 20px;">步骤 3：找到 Cookies</h3>
+        <p style="line-height: 1.8; color: #555; font-size: 14px;">
+            • Chrome/Edge：点击 "Application" → "Cookies"<br>
+            • Firefox：点击 "存储" → "Cookies"<br>
+            • 选择对应平台的域名
+        </p>
+        
+        <h3 style="color: #333; margin-top: 20px;">步骤 4：复制 Cookie</h3>
+        <p style="line-height: 1.8; color: #555; font-size: 14px;">
+            右键点击 Cookie 列表，选择"复制" → "复制所有 Cookie 值"
+        </p>
+        
+        <h3 style="color: #333; margin-top: 20px;">步骤 5：粘贴保存</h3>
+        <p style="line-height: 1.8; color: #555; font-size: 14px;">
+            回到本软件，点击"配置"按钮，粘贴 Cookie 并保存
+        </p>
+        
+        <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; 
+                    padding: 15px; margin-top: 20px; border-radius: 8px;">
+            <p style="color: #856404; margin: 0; font-size: 14px;">
+                <b>⚠️ 安全提示：</b>Cookie 包含账号登录信息，请妥善保管，不要分享给他人
+            </p>
+        </div>
         ''')
         info_text.setWordWrap(True)
         info_layout.addWidget(info_text)
         
         layout.addWidget(info_card)
         
-        self.setLayout(layout)
+        # 关闭按钮
+        close_btn = ModernButton('知道了')
+        close_btn.setFixedHeight(50)
+        close_btn.clicked.connect(help_dialog.accept)
+        
+        btn_layout = QHBoxLayout()
+        btn_layout.addStretch()
+        btn_layout.addWidget(close_btn)
+        btn_layout.addStretch()
+        layout.addLayout(btn_layout)
+        
+        help_dialog.setLayout(layout)
+        help_dialog.exec_()
     
     def refresh_cookie_status(self):
         """刷新 Cookie 状态"""
         statuses = cookie_manager.get_all_status()
         
-        self.zhihu_card.update_status(statuses.get('zhihu', {}))
-        self.xiaohongshu_card.update_status(statuses.get('xiaohongshu', {}))
-        self.kuaishou_card.update_status(statuses.get('kuaishou', {}))
-        self.douyin_card.update_status(statuses.get('douyin', {}))
+        for platform_key, card in self.platform_cards.items():
+            card.update_status(statuses.get(platform_key, {}))
         
-        # 加载验证历史
-        self.load_validation_history()
-    
-    def load_validation_history(self):
-        """加载验证历史"""
-        history = cookie_manager.get_validation_history(limit=10)
-        
-        self.validation_table.setRowCount(0)
-        
-        platform_icons = {
-            'zhihu': '📝',
-            'xiaohongshu': '📕',
-            'kuaishou': '📹',
-            'douyin': '🎵'
-        }
-        
-        for record in history:
-            row = self.validation_table.rowCount()
-            self.validation_table.insertRow(row)
-            
-            platform = record.get('platform', '')
-            icon = platform_icons.get(platform, '📌')
-            
-            # 平台
-            self.validation_table.setItem(row, 0, QTableWidgetItem(f'{icon} {platform}'))
-            
-            # 状态
-            status = '✅ 有效' if record.get('is_valid') else '❌ 无效'
-            status_item = QTableWidgetItem(status)
-            status_item.setForeground(QColor('#10b981' if record.get('is_valid') else '#ef4444'))
-            self.validation_table.setItem(row, 1, status_item)
-            
-            # 用户
-            self.validation_table.setItem(row, 2, QTableWidgetItem(record.get('username', '-')))
-            
-            # 时间
-            checked_at = record.get('checked_at', '')
-            if checked_at:
-                try:
-                    dt = datetime.fromisoformat(checked_at)
-                    checked_at = dt.strftime('%m-%d %H:%M')
-                except:
-                    pass
-            self.validation_table.setItem(row, 3, QTableWidgetItem(checked_at))
+        # 显示提示
+        QMessageBox.information(self, '刷新完成', '所有平台 Cookie 状态已更新')
 
 
 class MainWindow(QMainWindow):
@@ -1208,3 +1367,26 @@ class MainWindow(QMainWindow):
         
         # 清理工作线程
         self.current_workers = []
+
+
+if __name__ == '__main__':
+    """主程序入口"""
+    import sys
+    from PyQt5.QtWidgets import QApplication
+    from PyQt5.QtCore import Qt
+    
+    # 启用高 DPI 支持
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+    
+    # 创建应用
+    app = QApplication(sys.argv)
+    app.setApplicationName('多平台发布助手')
+    app.setOrganizationName('MultiPlatformPublisher')
+    
+    # 创建主窗口
+    window = MainWindow()
+    window.show()
+    
+    # 运行应用
+    sys.exit(app.exec_())
