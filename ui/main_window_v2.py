@@ -39,8 +39,9 @@ class ModernButton(QPushButton):
     
     def setup_style(self):
         """设置样式"""
-        self.setFixedHeight(45)
+        self.setMinimumHeight(50)
         self.setCursor(Qt.PointingHandCursor)
+        self.setSizePolicy(self.sizePolicy().horizontalPolicy(), QSizePolicy.Preferred)
         
         if self.danger:
             self.setStyleSheet('''
@@ -52,7 +53,8 @@ class ModernButton(QPushButton):
                     border-radius: 12px;
                     font-size: 15px;
                     font-weight: 600;
-                    padding: 10px 20px;
+                    padding: 12px 25px;
+                    min-width: 120px;
                 }
                 QPushButton:hover {
                     background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
@@ -73,7 +75,8 @@ class ModernButton(QPushButton):
                     border-radius: 12px;
                     font-size: 15px;
                     font-weight: 600;
-                    padding: 10px 20px;
+                    padding: 12px 25px;
+                    min-width: 120px;
                 }
                 QPushButton:hover {
                     background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
@@ -93,7 +96,8 @@ class ModernButton(QPushButton):
                     border-radius: 12px;
                     font-size: 14px;
                     font-weight: 500;
-                    padding: 10px 20px;
+                    padding: 12px 25px;
+                    min-width: 100px;
                 }
                 QPushButton:hover {
                     background-color: #e8e8e8;
